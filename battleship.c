@@ -9,7 +9,7 @@
 char displayTitle();
 void renderBoard(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]);
 int placeShip(int shipSize, int x[2], int y[2], char board[BOARD_SIZE][BOARD_SIZE]);
-void setupShips(char board[BOARD_SIZE][BOARD_SIZE]);
+void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]);
 
 
 int main(){
@@ -28,23 +28,11 @@ int main(){
     shootingBoard[6][5] = 'M';
     shootingBoard[8][2] = 'H';
 
-    //testing placing ships
-    int x[2] = {3,2};
-    int y[2] = {3,4};
-    placeShip(3, x, y, board);
-
-    int x2[2] = {5,4};
-    int y2[2] = {5,8};
-    placeShip(5, x2, y2, board);
-    
-    int x3[2] = {1,3};
-    int y3[2] = {4,3};
-    placeShip(4, x3, y3, board);
-
     char wantsToPlay;
     wantsToPlay = displayTitle();
     if(wantsToPlay == 'Y'){
         printf("\nlets play\n\n");
+        setupShips(board, shootingBoard);
         renderBoard(board, shootingBoard);
     } else{
         printf("No problem");
@@ -75,7 +63,7 @@ void renderBoard(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SI
     char to_yellow[] = "\033[33m";
     char to_white[] = "\033[0m";
 
-    printf("   Your Board                     Battle map\n\n");
+    printf("\n   Your Board                     Battle map\n");
     printf("   A B C D E F G H I J            A B C D E F G H I J\n");
     for(int i = 0; i < BOARD_SIZE; i++){
         if(i == 9){
@@ -178,7 +166,7 @@ int placeShip(int shipSize, int start[2], int end[2], char board[BOARD_SIZE][BOA
 }
 
 
-void setupShips(char board[BOARD_SIZE][BOARD_SIZE]){
+void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]){
     char startInput[2];
     int start[2];
     char endInput[2];
@@ -191,21 +179,31 @@ void setupShips(char board[BOARD_SIZE][BOARD_SIZE]){
     printf("Enter the coordinates for the start and end of each ship\n");
     printf("The coordinates need to be the correct distance apart\n");
     printf("You also need to enter them as letter then number\n");
-    printf("For example: a ship of length 3 could have coordinates A1 to A3");
+    printf("For example: a ship of length 3 could have coordinates A1 to A3\n");
+    
     while(i<6){
         placed = 0;
+        renderBoard(board, shootingBoard);
         printf("For ship of length %d\n", i);
+
         printf("Enter the start coordinate: ");
         scanf(" %s", startInput);
         letter = startInput[0];
-        start[0] = letter - 'A';
-        start[1] = startInput[1];
+        putchar(letter);
+        start[0] = toupper(letter) - 'A';
+        putchar(start[0]);
+        start[1] = startInput[1] - '0';
+
         printf("\nEnter the end coordinates: ");
         scanf(" %s", endInput);
         letter = endInput[0];
-        end[0] = letter - 'A';
-        end[1] = endInput[1];
+        putchar(letter);
+        end[0] = toupper(letter) - 'A';
+        putchar(end[0]);
+        end[1] = endInput[1] - '0';
+
+        printf("start:%d,%d  End:%d,%d  i:%d", start[0], start[1], end[0], end[1], i);
         placed = placeShip(i, start, end, board);
-        placed ? i++ : printf("There is a problem with the coordinates provided, try again");
+        placed ? i++ : printf("\nThere is a problem with the coordinates provided, try again");
     }
-}
+} 
