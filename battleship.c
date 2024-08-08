@@ -167,9 +167,9 @@ int placeShip(int shipSize, int start[2], int end[2], char board[BOARD_SIZE][BOA
 
 
 void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]){
-    char startInput[2];
+    char startInput[3];
+    char endInput[3];
     int start[2];
-    char endInput[2];
     int end[2];
     char letter;
     int i = 2;
