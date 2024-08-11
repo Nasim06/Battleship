@@ -4,19 +4,22 @@
 #include <stdlib.h>
 #include <windows.h> 
 #include <unistd.h>
-#include "consoleOutput.c"
+#include "boardPrinting.c"
 #include "setup.c"
+#include "checks.c"
 
 #define BOARD_SIZE 10
 
-char displayTitle();
+void displayTitle();
 void printBoards(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]);
+void printSingleBoard(char board[BOARD_SIZE][BOARD_SIZE]);
 int placeShip(int shipSize, int x[2], int y[2], char board[BOARD_SIZE][BOARD_SIZE]);
 void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]);
 void generateEnemyShips(char enemyBoard[BOARD_SIZE][BOARD_SIZE]);
-void printSingleBoard(char board[BOARD_SIZE][BOARD_SIZE]);
-void clearScreen();
-
+int checkAlive(char board[BOARD_SIZE][BOARD_SIZE]);
+int checkShipSunk(char board[BOARD_SIZE][BOARD_SIZE], char hitShip);
+int fireShot(char enemyboard[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE], char board[BOARD_SIZE][BOARD_SIZE]);
+int enemyShoot(char board[BOARD_SIZE][BOARD_SIZE]);
 
 
 int main(){
@@ -25,6 +28,8 @@ int main(){
     char shootingBoard[BOARD_SIZE][BOARD_SIZE];
     char board[BOARD_SIZE][BOARD_SIZE];
     char wantsToPlay;
+    int win = 0;
+    int lose = 0;
 
     for(int i = 0; i < 10; i++){
         for(int j = 0; j < 10; j++){
@@ -35,83 +40,109 @@ int main(){
     }
 
     generateEnemyShips(enemyBoard);
-    printSingleBoard(enemyBoard);
-    wantsToPlay = displayTitle();
-
-    if(wantsToPlay == 'Y'){
-        printf("\nlets play\n\n");
-        setupShips(board, shootingBoard);
-        printBoards(board, shootingBoard);
-    } else{
-        printf("No problem");
+    displayTitle();
+    setupShips(board, shootingBoard);
+    printBoards(board, shootingBoard);
+    
+    while(!win && !lose){
+        lose = enemyShoot(board);
+        win = fireShot(enemyBoard, shootingBoard, board);
+    }
+    if(win){
+        printf("\nWell done Player, you have sunk all of the enemies ships");
+        printf("\nYou are clearly a brilliant strategist\n");
+    }
+    if(lose){
+        printf("\nUnfortunately the enemy has sunk all of your ships");
+        printf("\nYou have lost to a computer, how very sad, \"Alexa play Despacito\"");
     }
 
     return 0;
 }
 
 
-char displayTitle(){
+
+void displayTitle(){
     char answer;
     printf("\n*****************\n");
     printf("   Battleships   ");
     printf("\n*****************\n\n");
-    printf("options:\n");
-    printf("Yeah sure, lets play (Y)\n");
-    printf("No thanks, I'm scared (N)\n");
-    scanf(" %c", &answer);
-    answer = toupper(answer);
-    return answer;
+    printf("The tabletop strategy game, brought to you through the power of electricity\n");
+    printf("Press a key to play");
+    getchar();
 }
 
 
 
-int placeShip(int shipSize, int start[2], int end[2], char board[BOARD_SIZE][BOARD_SIZE]){
-    
-    int ship[shipSize][shipSize];
-    int dist = 0;
-    int x1 = start[0]; int y1 = start[1];
-    int x2 = end[0]; int y2 = end[1];
+int fireShot(char enemyboard[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE],
+            char board[BOARD_SIZE][BOARD_SIZE]){
 
-    if(x1 == x2){
-        dist = abs(y1 - y2);
-    }
-    if(y1 == y2){
-        dist = abs(x1 - x2);
-    }
-    if(dist != shipSize - 1){
-        return 0;
-    }
-
-    for(int i = 0; i < shipSize; i++){
-        if(x1 == x2){
-            if(y1 < y2){
-                ship[i][0] = x1;
-                ship[i][1] = y1 + i;
-            } else{
-                ship[i][0] = x1;
-                ship[i][1] = y1 - i;
-            }
+    int x, y;
+    char pos[4];
+    int valid = 0;
+    printBoards(board, shootingBoard);
+    while(!valid){
+        printf("Enter the coordinates of where you want to shoot: ");
+        scanf("%s", pos);
+        x = toupper(pos[0]) - 'A';
+        if(pos[1] == '1' && pos[2] == '0'){
+            y = 9;
+        } else {
+            y = (pos[1] - '0') - 1;
         }
-        if(y1 == y2){
-            if(x1 < x2){
-                ship[i][0] = x1 + i;
-                ship[i][1] = y1;
-            } else{
-                ship[i][0] = x1 - i;
-                ship[i][1] = y1;
-            }
+
+        if(x >= 0 && x <= 9 && y >= 0 && y <= 9){
+            valid = 1;
+        }else{
+            printf("The coordinates you entered are invalid\n");
         }
     }
 
-    for(int i = 0; i < shipSize; i++){
-        if(board[ship[i][0]][ship[i][1]] == 'S'){
-            return 0;
-        } 
+    char elem = enemyboard[x][y];
+    if(elem == '2' || elem == '3' || elem == '4' || elem == '5'){
+        enemyboard[x][y] = 'H';
+        shootingBoard[x][y] = 'H';
+        printf("It's a hit\n");
+        int sunk = checkShipSunk(enemyboard,elem);
+        if(sunk){
+            printf("You have sunk ship %d\n", (elem - '0'));
+            return !checkAlive(enemyboard);
+        }
+    } else{
+        if(elem == 'H' || elem == 'M'){
+            printf("You've already hit this point, silly billy\n");
+        } else{
+            printf("That's a miss, chief. Better luck next time\n");
+            shootingBoard[x][y] = 'M';
+        }
     }
-    for(int i = 0; i < shipSize; i++){
-        board[ship[i][0]][ship[i][1]] = 'S';
-    }
-
-    return 1;
+    return 0;
 }
 
+
+
+int enemyShoot(char board[BOARD_SIZE][BOARD_SIZE]){
+    int x, y;
+    time_t t;
+    srand(time(&t));
+    x = rand() % BOARD_SIZE;
+    y = rand() % BOARD_SIZE;
+
+    char elem = board[x][y];
+    printf("The enemy has fired at [%c, %d]\n", (x + 'A'), (y + 1));
+    if(elem == '2' || elem == '3' || elem == '4' || elem == '5'){
+        board[x][y] = 'H';
+        printf("It's a hit\n");
+        int sunk = checkShipSunk(board,elem);
+        if(sunk){
+            printf("Your ship %d, has been sunk :(\n", (elem - '0'));
+            return !checkAlive(board);
+        }
+    } else{
+        if(elem = '0'){
+            board[x][y] = 'M';
+        }
+        printf("The enemy has missed\n");
+    }
+    return 0;
+}

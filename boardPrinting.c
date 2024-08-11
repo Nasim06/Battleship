@@ -21,8 +21,8 @@ void printBoards(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SI
             if(elem == 'H'){
                 printf(" %s%c%s", to_red, elem, to_white);
             }
-            if(elem == 'S'){
-                printf(" %s%c%s", to_green, elem, to_white);
+            if(elem == '2' || elem == '3' || elem == '4' || elem == '5'){
+                printf(" %s%c%s", to_green, 'S', to_white);
             }
             if(elem == 'M'){
                 printf(" %s%c%s", to_yellow, elem, to_white);
@@ -43,9 +43,6 @@ void printBoards(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SI
             char elem = shootingBoard[j][i];
             if(elem == 'H'){
                 printf(" %s%c%s", to_red, elem, to_white);
-            }
-            if(elem == 'S'){
-                printf(" %s%c%s", to_green, elem, to_white);
             }
             if(elem == 'M'){
                 printf(" %s%c%s", to_yellow, elem, to_white);
@@ -80,25 +77,14 @@ void printSingleBoard(char board[BOARD_SIZE][BOARD_SIZE]){
             if(elem == 'H'){
                 printf(" %s%c%s", to_red, elem, to_white);
             }
-            if(elem == 'S'){
-                printf(" %s%c%s", to_green, elem, to_white);
-            }
             if(elem == 'M'){
                 printf(" %s%c%s", to_yellow, elem, to_white);
             }
-            if(elem == '0'){
+            if(elem != 'H' && elem != 'S' && elem != 'M'){
                 printf(" %c", elem);   
             }
         }
         printf("\n");
     }
 
-}
-
-
-
-void clearScreen(){
-    for(int i = 0; i < 30; i++){
-        printf("\n");
-    }
 }

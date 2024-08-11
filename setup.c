@@ -1,8 +1,60 @@
 #include <time.h>
 #define BOARD_SIZE 10
 
-int placeShip(int shipSize, int x[2], int y[2], char board[BOARD_SIZE][BOARD_SIZE]);
-void printBoards(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]);
+
+int placeShip(int shipSize, int start[2], int end[2], char board[BOARD_SIZE][BOARD_SIZE]){
+    
+    int ship[shipSize][shipSize];
+    int dist = 0;
+    int x1 = start[0]; int y1 = start[1];
+    int x2 = end[0]; int y2 = end[1];
+
+    if(x1 == x2){
+        dist = abs(y1 - y2);
+    }
+    if(y1 == y2){
+        dist = abs(x1 - x2);
+    }
+    if(dist != shipSize - 1){
+        return 0;
+    }
+
+    for(int i = 0; i < shipSize; i++){
+        if(x1 == x2){
+            if(y1 < y2){
+                ship[i][0] = x1;
+                ship[i][1] = y1 + i;
+            } else{
+                ship[i][0] = x1;
+                ship[i][1] = y1 - i;
+            }
+        }
+        if(y1 == y2){
+            if(x1 < x2){
+                ship[i][0] = x1 + i;
+                ship[i][1] = y1;
+            } else{
+                ship[i][0] = x1 - i;
+                ship[i][1] = y1;
+            }
+        }
+    }
+
+    for(int i = 0; i < shipSize; i++){
+        if(board[ship[i][0]][ship[i][1]] != '0'){
+            return 0;
+        } 
+    }
+
+    for(int i = 0; i < shipSize; i++){
+        board[ship[i][0]][ship[i][1]] = shipSize + '0';
+    }
+
+    return 1;
+}
+
+
+
 
 
 void generateEnemyShips(char enemyBoard[BOARD_SIZE][BOARD_SIZE]){
@@ -16,45 +68,43 @@ void generateEnemyShips(char enemyBoard[BOARD_SIZE][BOARD_SIZE]){
     int placed = 0;
 
     while(i < 6){
-        start[0] = rand() % BOARD_SIZE;
-        start[1] = rand() % BOARD_SIZE;
+
+        end[0] = -1;
+        end[1] = -1;
         direction = rand() % 4;
         placed = 0;
-
-        printf("dir:%d, %d %d\n", direction, start[0], start[1]);
-
-        if(direction == 0){
-            end[0] = start[0];
-            end[1] = start[1] - (i-1);
-            while(end[1] < 0 || end[1] >= BOARD_SIZE){
-                start[1] = rand() % BOARD_SIZE;
-                end[1] = start[1] - (i-1);
-            }
+        
+        switch(direction){
+            case 0:
+                while(end[1] < 0 || end[1] >= BOARD_SIZE){
+                    end[0] = start[0] = rand() % BOARD_SIZE;
+                    start[1] = rand() % BOARD_SIZE;
+                    end[1] = start[1] - (i-1);
+                }
+                break;
+            case 1:
+                while(end[0] < 0 || end[0] >= BOARD_SIZE){
+                    end[1] = start[1] = rand() % BOARD_SIZE;
+                    start[0] = rand() % BOARD_SIZE;
+                    end[0] = start[0] + (i-1);
+                }
+                break;
+            case 2:
+                while(end[1] < 0 || end[1] >= BOARD_SIZE){
+                    end[0] = start[0] = rand() % BOARD_SIZE;
+                    start[1] = rand() % BOARD_SIZE;
+                    end[1] = start[1] + (i-1);
+                }
+                break;
+            case 3:
+                while(end[0] < 0 || end[0] >= BOARD_SIZE){
+                    end[1] = start[1] = rand() % BOARD_SIZE;
+                    start[0] = rand() % BOARD_SIZE;
+                    end[0] = start[0] - (i-1);
+                }
+                break;
         }
-        if(direction == 1){
-            end[0] = start[0] + (i-1);
-            end[1] = start[1];
-            while(end[0] < 0 || end[0] >= BOARD_SIZE){
-                start[0] = rand() % BOARD_SIZE;
-                end[0] = start[0] + (i-1);
-            }
-        }
-        if(direction == 2){
-            end[0] = start[0];
-            end[1] = start[1] + (i-1);
-            while(end[1] < 0 || end[1] >= BOARD_SIZE){
-                start[1] = rand() % BOARD_SIZE;
-                end[1] = start[1] + (i-1);
-            }
-        }
-        if(direction == 3){
-            end[0] = start[0] - (i-1);
-            end[1] = start[1];
-            while(end[0] < 0 || end[0] >= BOARD_SIZE){
-                start[0] = rand() % BOARD_SIZE;
-                end[0] = start[0] - (i-1);
-            }
-        }
+        
         placed = placeShip(i, start, end, enemyBoard);
         if(placed == 1){
             i++;
@@ -65,7 +115,9 @@ void generateEnemyShips(char enemyBoard[BOARD_SIZE][BOARD_SIZE]){
 
 
 
+
 void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZE][BOARD_SIZE]){
+
     char startInput[4];
     char endInput[4];
     int start[2];
@@ -73,8 +125,9 @@ void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZ
     char letter;
     int i = 2;
     int placed;
+    int error = 0;
 
-    printf("Lets put down four ships\n");
+    printf("\n\nLets put down four ships\n");
     printf("Enter the coordinates for the start and end of each ship\n");
     printf("The coordinates need to be the correct distance apart\n");
     printf("You also need to enter them as letter then number\n");
@@ -83,6 +136,11 @@ void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZ
     while(i<6){
         placed = 0;
         printBoards(board, shootingBoard);
+
+        if(error == 1){
+            printf("\nThere is a problem with the coordinates provided, try again\n");
+        }
+        error = 0;
         printf("For ship of length %d\n", i);
 
         printf("Enter the start coordinate: ");
@@ -95,7 +153,7 @@ void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZ
             start[1] = (startInput[1] - '0') - 1;
         }
 
-        printf("\nEnter the end coordinates: ");
+        printf("Enter the end coordinates: ");
         scanf(" %s", endInput);
         letter = endInput[0];
         end[0] = toupper(letter) - 'A';
@@ -105,8 +163,7 @@ void setupShips(char board[BOARD_SIZE][BOARD_SIZE], char shootingBoard[BOARD_SIZ
             end[1] = (endInput[1] - '0') - 1;
         }
         
-        printf("start:%d,%d  End:%d,%d  i:%d", start[0], start[1], end[0], end[1], i);
         placed = placeShip(i, start, end, board);
-        placed ? i++ : printf("\nThere is a problem with the coordinates provided, try again");
+        placed ? i++ : (error = 1); 
     }
 } 
